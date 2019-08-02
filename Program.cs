@@ -56,6 +56,11 @@ namespace UserInputExample
             students.ForEach(student =>
             {
                 Console.WriteLine($"{student.FirstName} {student.LastName} with the slack handle {student.SlackHandle} is in Cohort{student.Cohort.Num}");
+                student.Exercises.ForEach(e =>
+                {
+                    Console.WriteLine($"{e.Exercise_name}");
+
+                });
             });
         }
 

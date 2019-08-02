@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Text;
 
 namespace StudentExercise3.Data
@@ -29,10 +30,10 @@ namespace StudentExercise3.Data
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, s.CohortId, c.Num, e.Exercise_Name, e.Exercise_Language, e.Id
+                        SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, s.CohortId, c.Num, e.Exercise_Name, e.Exercise_Language, a.ExerciseId
                         FROM Student s
                         LEFT JOIN Cohort c ON s.CohortID = c.Id
-                        LEFT JOIN Assignments a ON s.Id = a.StudentId
+                        JOIN Assignments a ON s.Id = a.StudentId
                         LEFT JOIN EXERCISE e ON a.ExerciseId = e.Id";  
 
                     SqlDataReader reader = cmd.ExecuteReader();
@@ -57,10 +58,20 @@ namespace StudentExercise3.Data
                         int cohortIdColumnPosition = reader.GetOrdinal("CohortId");
                         int cohortIdValue = reader.GetInt32(cohortIdColumnPosition);
 
-                        Student student = new Student
+                    
+
+                        Exercise exercise = new Exercise
                         {
+                            Id = reader.GetInt32(reader.GetOrdinal("ExerciseId")),
+                            Exercise_name = reader.GetString(reader.GetOrdinal("Exercise_Name")),
+                            Exercise_language = reader.GetString(reader.GetOrdinal("Exercise_Language")),
+                        };
 
 
+                        if (!students.Any(s => s.Id == idValue))
+                        {
+                            Student student = new Student
+                        {
                             Id = idValue,
                             FirstName = firstNameValue,
                             LastName = lastNameValue,
@@ -71,10 +82,17 @@ namespace StudentExercise3.Data
                                 Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
                                 Num = reader.GetInt32(reader.GetOrdinal("Num"))
                             },
-                            
+                            Exercises = new List<Exercise>()
                         };
 
-                        students.Add(student);
+                        
+                            student.Exercises.Add(exercise);
+                            students.Add(student);
+                        } else
+                        {
+                            students.Find(s => s.Id == idValue).Exercises.Add(exercise);
+                        };
+
                     }
 
                     reader.Close();
